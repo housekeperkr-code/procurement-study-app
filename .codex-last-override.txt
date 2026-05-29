@@ -1,1 +1,1 @@
-responsive dashboard row checked
+dashboard height alignment checked
