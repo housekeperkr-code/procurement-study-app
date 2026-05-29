@@ -1,0 +1,329 @@
+name: Apply practical RPG polish
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .game-trigger.txt
+      - .github/workflows/apply-practical-rpg-polish.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-practical-rpg-polish
+  cancel-in-progress: false
+
+jobs:
+  apply-polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch practical RPG UI and quizzes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          LOCAL_PENDING_CSS = r'''
+          /* codex local pending overrides start */
+          .wrap>.sub{font-size:13px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          #homeRoot .dday-card{grid-template-columns:auto minmax(0,1fr);gap:clamp(12px,1.6vw,20px);padding:clamp(18px,2.2vw,26px)}
+          #homeRoot .dday-card b{justify-self:start;align-self:center;text-align:left}
+          #homeRoot .dday-card>div{justify-self:end;align-self:center;text-align:right;min-width:0;margin-left:auto}
+          #homeRoot .dday-card strong,#homeRoot .dday-card span{justify-self:end;align-self:end;text-align:right;margin-left:auto}
+          #homeRoot .study-summary-panel{min-height:var(--visit-size,224px);padding:20px 24px;display:grid;grid-template-rows:auto minmax(0,1fr) auto;align-items:stretch}
+          #homeRoot .study-summary-panel .home-titleline{margin-bottom:12px}
+          #homeRoot .study-summary-panel .home-flow{height:100%;display:grid;grid-template-rows:repeat(4,1fr);gap:0}
+          #homeRoot .study-summary-panel .home-flow-row{min-height:0;display:grid;grid-template-columns:118px minmax(0,1fr);align-items:center;padding:8px 0}
+          #homeRoot .study-summary-panel .home-flow-row b,#homeRoot .study-summary-panel .home-flow-row span{align-self:center}
+          #homeRoot .study-summary-panel .home-actions{margin-top:12px}
+          /* codex local pending overrides end */
+          '''.strip()
+
+          GAME_CSS = r'''
+          /* codex practical game skin start */
+          #flowsim .pixel-hero{border:0;border-radius:24px;background:#16151c;box-shadow:0 18px 40px #00000045;isolation:isolate}
+          #flowsim .pixel-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#00000070 0%,#00000010 48%,#00000070 100%);z-index:1;pointer-events:none}
+          #flowsim .pixel-hero::after{z-index:1;background:linear-gradient(180deg,transparent 42%,#050506d9)}
+          #flowsim .pixel-hero img{filter:saturate(1.18) contrast(1.04)}
+          #flowsim .pixel-caption{z-index:2;left:18px;bottom:16px;gap:8px}
+          #flowsim .pixel-caption .tag{border:0;background:#ffffffeb;color:#16151c;font-weight:800;box-shadow:0 6px 0 #00000028}
+          #flowsim .flow-mode-tabs{padding:7px;background:#15151b;border-radius:999px;width:max-content;max-width:100%;box-shadow:inset 0 0 0 1px #ffffff0f;margin:18px 0}
+          #flowsim .flow-mode-tabs .btn{border:0;border-radius:999px;background:transparent;box-shadow:none}
+          #flowsim .flow-mode-tabs .btn.active{background:#ffd33d;color:#17120b;box-shadow:0 7px 0 #0000002e}
+          #flowsim .prac-toolbar{gap:10px;margin:18px 0}
+          #flowsim .prac-toolbar .btn{border:0;border-radius:16px;background:#22232b;box-shadow:0 7px 0 #111217;color:#f5f7fb}
+          #flowsim .prac-toolbar .btn.primary{background:#12c7a2;color:#041613}
+          #flowsim .prac-toolbar .btn:hover,#flowsim .rpg-choice:hover,#flowsim .sim-choice:hover{transform:translateY(-1px)}
+          #flowsim .flow-sim,#flowsim .rpg-layout{gap:18px;align-items:start}
+          #flowsim .sim-panel,#flowsim .rpg-card{border:0;border-radius:24px;background:linear-gradient(180deg,#22232a 0%,#17181f 100%);box-shadow:0 18px 44px #0000003c,inset 0 1px 0 #ffffff12}
+          #flowsim .rpg-layout>#rpgRoot>.rpg-card{position:relative;overflow:hidden}
+          #flowsim .rpg-layout>#rpgRoot>.rpg-card::before{content:"QUEST";position:absolute;right:18px;top:14px;font-size:11px;letter-spacing:.12em;color:#ffffff55;font-weight:800}
+          #flowsim .sim-phase{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:6px 10px;border-radius:999px;background:#00000038;color:#ffd33d;margin-bottom:12px}
+          #flowsim .sim-title{font-size:clamp(21px,2.2vw,28px);line-height:1.35;margin-bottom:10px}
+          #flowsim .sim-q,#flowsim .rpg-scene{background:#f6f1ff;color:#17120b;border-radius:20px;padding:16px 18px;box-shadow:0 8px 0 #00000028;font-weight:800;position:relative}
+          #flowsim .rpg-scene::before{content:"💬";display:inline-grid;place-items:center;width:30px;height:30px;margin-right:8px;border-radius:10px;background:#ffd33d;color:#17120b}
+          #flowsim .sim-desc,#flowsim .rpg-dialog{border:0;border-radius:20px;background:#111219;color:#dfe7f4;padding:14px 16px}
+          #flowsim .rpg-dialog{display:flex;align-items:center;gap:10px}
+          #flowsim .rpg-dialog::before{content:"👩‍💼";display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:14px;background:#1e88f5;font-size:22px;box-shadow:0 6px 0 #00000026}
+          #flowsim .rpg-case{grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:14px 0}
+          #flowsim .rpg-case div,#flowsim .rpg-stats div{border:0;border-radius:18px;background:#111219;box-shadow:inset 0 0 0 1px #ffffff0c}
+          #flowsim .rpg-case b,#flowsim .rpg-stats span{color:#aeb9ca}
+          #flowsim .rpg-case span{font-weight:800;color:#fff}
+          #flowsim .rpg-stats{gap:10px;margin:14px 0}
+          #flowsim .rpg-stats div{position:relative;overflow:hidden;padding:14px}
+          #flowsim .rpg-stats div::after{content:"";display:block;height:7px;margin-top:10px;border-radius:999px;background:linear-gradient(90deg,#12c7a2,#ffd33d,#1e88f5)}
+          #flowsim .rpg-stats b{font-size:28px;color:#ffd33d}
+          #flowsim .rpg-choices,#flowsim .sim-choices{gap:12px}
+          #flowsim .rpg-choice,#flowsim .sim-choice,#flowsim .rpg-doc{border:0;border-radius:20px;background:#23252e;color:#f3f6fb;box-shadow:0 8px 0 #111217;padding:14px 16px;transition:transform .12s ease,background .12s ease}
+          #flowsim .rpg-choice{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-items:center}
+          #flowsim .rpg-choice::before{content:"➜";display:grid;place-items:center;width:34px;height:34px;border-radius:12px;background:#1e88f5;color:#fff;font-weight:900}
+          #flowsim .rpg-choice b,#flowsim .sim-choice b{font-size:15.5px;margin-bottom:4px}
+          #flowsim .rpg-choice.good,#flowsim .rpg-doc.good{background:#12392f;color:#e7fff4}
+          #flowsim .rpg-choice.bad,#flowsim .rpg-doc.bad{background:#43171c;color:#ffe7e9}
+          #flowsim .rpg-result,#flowsim .sim-feedback,#flowsim .rpg-hint{border:0;border-radius:20px;padding:15px 16px;box-shadow:inset 0 0 0 1px #ffffff10}
+          #flowsim .rpg-result.ok,#flowsim .sim-feedback.ok{background:#12392f}
+          #flowsim .rpg-result.warn,#flowsim .sim-feedback.warn{background:#3d3214}
+          #flowsim .rpg-result.bad,#flowsim .sim-feedback.bad{background:#43171c}
+          #flowsim .cutscene{border:0;border-radius:24px;background:#15161d;box-shadow:0 14px 32px #00000038}
+          #flowsim .cutscene-art{border:0;min-height:150px}
+          #flowsim .cutscene-bubble{border:0;border-radius:20px;box-shadow:0 8px 0 #00000022;font-weight:700}
+          #flowsim .rpg-log{gap:10px}
+          #flowsim .rpg-log-item,#flowsim .sim-step{border:0;border-radius:18px;background:#111219;box-shadow:inset 0 0 0 1px #ffffff0c;padding:12px}
+          #flowsim .sim-step.current{background:#12392f;color:#ecfff5}
+          #flowsim .sim-actions{gap:10px}
+          #flowsim .sim-actions .btn{border:0;border-radius:15px;background:#2b2d37;box-shadow:0 7px 0 #111217}
+          #flowsim .sim-actions .btn.primary{background:#1e88f5;color:#fff}
+          #flowsim .rpg-quest-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;margin:4px 0 16px}
+          #flowsim .rpg-avatar{width:64px;height:64px;border-radius:22px;display:grid;place-items:center;background:#ffd33d;color:#17120b;font-size:34px;box-shadow:0 9px 0 #0000002b}
+          #flowsim .rpg-quest-title{font-size:13px;color:#aeb9ca;font-weight:800;margin-bottom:4px}
+          #flowsim .rpg-quest-main{font-size:clamp(21px,2.2vw,28px);line-height:1.25;color:#fff;font-weight:800}
+          #flowsim .rpg-stage-map{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:12px 0 16px}
+          #flowsim .rpg-map-node{min-width:0;border-radius:14px;background:#111219;color:#8d99aa;padding:8px 6px;text-align:center;font-size:12px;font-weight:800;box-shadow:inset 0 0 0 1px #ffffff0c}
+          #flowsim .rpg-map-node.done{background:#12392f;color:#dffff0}
+          #flowsim .rpg-map-node.active{background:#ffd33d;color:#17120b;box-shadow:0 7px 0 #0000002b}
+          #flowsim .rpg-npc-line{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center}
+          #flowsim .rpg-npc-line .npc-face{width:42px;height:42px;border-radius:15px;background:#1e88f5;display:grid;place-items:center;font-size:23px;box-shadow:0 6px 0 #00000024}
+          #flowsim .rpg-npc-line .npc-text{min-width:0}
+          #flowsim .rpg-npc-line b{display:block;color:#fff;margin-bottom:2px}
+          #flowsim .rpg-choice .choice-title{display:block;color:#fff;font-size:15.5px;line-height:1.45}
+          #flowsim .rpg-choice .choice-desc{display:block;color:#cbd5e6;font-size:13.2px;line-height:1.55;margin-top:3px}
+          #flowsim .rpg-choice .choice-law{display:block;color:#9fabbc;font-size:12px;line-height:1.5;margin-top:6px}
+          #flowsim .rpg-choice .choice-title,#flowsim .rpg-choice .choice-desc,#flowsim .rpg-choice .choice-law{grid-column:2}
+          #flowsim .rpg-mission-card{background:linear-gradient(180deg,#25222a 0%,#17181f 100%)}
+          #flowsim .rpg-gate-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:12px 0}
+          #flowsim .rpg-gate-dot{height:10px;border-radius:999px;background:#30323d}
+          #flowsim .rpg-gate-dot.done{background:#12c7a2}
+          @media(max-width:820px){#flowsim .flow-mode-tabs{width:100%;justify-content:center}#flowsim .rpg-choice{grid-template-columns:1fr}#flowsim .rpg-choice::before{display:none}#flowsim .rpg-choice .choice-title,#flowsim .rpg-choice .choice-desc,#flowsim .rpg-choice .choice-law{grid-column:auto}#flowsim .cutscene-art{min-height:120px}}
+          /* codex practical game skin end */
+          '''.strip()
+
+          RPG_HELPERS = r'''
+          function rpgScenarioAvatar(type){
+            return type==='work'?'🏗️':type==='workSmall'?'🧱':type==='service'?'🧑‍💼':type==='goods'?'📦':'🎲';
+          }
+          function rpgProgressIndex(stage){
+            const s=[rpgState.stage,stage.phase,stage.scene].join(' ');
+            if(s.includes('하자')||s.includes('완료')||s.includes('finish'))return 5;
+            if(s.includes('검사')||s.includes('검수')||s.includes('준공')||s.includes('납품'))return 4;
+            if(s.includes('이행')||s.includes('착수')||s.includes('착공')||s.includes('기성'))return 3;
+            if(s.includes('선금')||s.includes('자금')||s.includes('네트워크론'))return 2;
+            if(s.includes('계약')||s.includes('상대자')||s.includes('견적'))return 1;
+            return 0;
+          }
+          function renderRpgMap(stage){
+            const labels=['예산','계약','자금','이행','검사','종결'];
+            const active=rpgProgressIndex(stage);
+            return `<div class="rpg-stage-map">${labels.map((x,i)=>`<div class="rpg-map-node ${i<active?'done':i===active?'active':''}">${esc(x)}</div>`).join('')}</div>`;
+          }
+          function rpgNpcLine(stage){
+            const face=stage.phase.includes('랜덤')?'😳':stage.phase.includes('하자')?'🛠️':stage.phase.includes('대금')||stage.phase.includes('선금')?'💳':'👩‍💼';
+            const who=stage.phase.includes('랜덤')?'현장 알림':stage.phase.includes('하자')?'감독관':stage.phase.includes('대금')||stage.phase.includes('선금')?'업체 담당자':'계약 담당자';
+            const line=stage.phase.includes('랜덤')?'잠깐, 예상 밖 사건이 들어왔어요. 기록부터 잡아야 해요.':'이 상황에서 담당자라면 무엇을 먼저 해야 할까요?';
+            return `<div class="rpg-dialog rpg-npc-line"><span class="npc-face">${face}</span><span class="npc-text"><b>${esc(who)}</b>${esc(line)}</span></div>`;
+          }
+          function rpgChoiceView(c,i){
+            const original=c.t||'';
+            let title=original;
+            if(original.includes('구두'))title='일단 말로 넘긴다...';
+            else if(original.includes('확인')&&original.includes('보증'))title='보증서부터 챙긴다';
+            else if(original.includes('확인')||original.includes('검토'))title='근거부터 차근차근 확인';
+            else if(original.includes('바로')||original.includes('먼저'))title='바로 진행해 본다';
+            else if(original.includes('신청')||original.includes('안내'))title='신청 루트를 열어준다';
+            const desc=c.d||'';
+            const law=title===original?'':original;
+            return `<button class="rpg-choice" onclick="rpgChoose(${i})"><span class="choice-title">${esc(title)}</span>${desc?`<span class="choice-desc">${esc(desc)}</span>`:''}${law?`<span class="choice-law">원래 선택지: ${esc(law)}</span>`:''}</button>`;
+          }
+          function rpgQuestionPassed(q,i){
+            if(q.type==='docs'){
+              const picked=rpgState.docAnswers[String(i)]||[];
+              const req=q.a||[];
+              return picked.length===req.length&&req.every(x=>picked.includes(x));
+            }
+            return rpgState.answers[i]===q.a;
+          }
+          function rpgShuffleQuestion(q){
+            if(q.type==='docs')return q;
+            const rows=q.o.map((text,idx)=>({text,correct:idx===q.a}));
+            const mixed=shuffle(rows);
+            return {...q,o:mixed.map(x=>x.text),a:mixed.findIndex(x=>x.correct)};
+          }
+          '''.strip()
+
+          RPG_RENDER_FUNCS = r'''
+          function renderRpg(){
+            const sc=currentRpgScenario();
+            const stage=currentRpgStage();
+            const result=rpgState.result;
+            const root=document.getElementById('rpgRoot');
+            if(!root)return;
+            root.innerHTML=`<div class="rpg-card">
+              <div class="rpg-quest-head">
+                <div class="rpg-avatar">${esc(rpgScenarioAvatar(rpgState.scenario))}</div>
+                <div><div class="rpg-quest-title">${esc(sc.type)} 계약 RPG</div><div class="rpg-quest-main">${esc(sc.title)}</div></div>
+              </div>
+              <div class="rpg-case">
+                <div><b>계약/예산</b><span>${esc(sc.budget)}</span></div>
+                <div><b>업체상황</b><span>${esc(sc.company)}</span></div>
+                <div><b>목표</b><span>${esc(sc.goal)}</span></div>
+              </div>
+              ${renderRpgMap(stage)}
+              <div class="rpg-stats">
+                <div><b>${rpgState.cash}</b><span>업체 자금</span></div>
+                <div><b>${rpgState.trust}</b><span>계약 안정도</span></div>
+                <div><b>${rpgState.log.length}</b><span>판단 기록</span></div>
+              </div>
+              <div class="sim-phase">${esc(stage.phase)}</div>
+              ${stage.eventTitle?`<div class="tag hot">랜덤 사건: ${esc(stage.eventTitle)}</div>`:''}
+              <div class="rpg-scene">${esc(stage.scene)}</div>
+              ${rpgNpcLine(stage)}
+              <button class="btn" onclick="rpgToggleHint()">💡 힌트 ${rpgState.hint?'숨기기':'보기'}</button>
+              <div class="rpg-hint ${rpgState.hint?'show':''}">${esc(stage.hint)}</div>
+              ${result?renderRpgResult(result):renderRpgChoices(stage)}
+              ${rpgState.gate?renderRpgGate():''}
+              ${rpgState.summarySaved?renderRpgSavedSummary():''}
+            </div>`;
+            document.getElementById('rpgLog').innerHTML=(rpgState.log.length?rpgState.log.slice().reverse().map(x=>`<div class="rpg-log-item ${x.kind}"><b>${esc(x.stage)}</b><br>${esc(x.choice)}<br>${esc(x.kind==='ok'?'✅':x.kind==='warn'?'⚠️':'❌')} ${esc(x.msg)}</div>`).join(''):'<div class="rpg-log-item">아직 선택 기록이 없습니다.</div>')+
+              (loadRpgSummaries().length?`<div class="rpg-log-item"><b>저장된 계약정리</b><br>${loadRpgSummaries().slice(0,3).map(s=>esc(s.title+' · '+new Date(s.t).toLocaleDateString('ko-KR'))).join('<br>')}</div>`:'');
+          }
+          function renderRpgChoices(stage){
+            return `<div class="rpg-choices">${stage.choices.map((c,i)=>rpgChoiceView(c,i)).join('')}</div>`;
+          }
+          '''.strip()
+
+          RPG_GATE_FUNC = r'''
+          function renderRpgGate(){
+            const gate=rpgState.gate;
+            const passed=rpgGatePassed();
+            const solved=gate.items.map((q,i)=>rpgQuestionPassed(q,i));
+            const rows=gate.items.map((q,qi)=>{
+              if(q.type==='docs'){
+                const picked=rpgState.docAnswers[String(qi)]||[];
+                const req=q.a||[];
+                const touched=picked.length>0;
+                const exact=picked.length===req.length&&req.every(x=>picked.includes(x));
+                return `<div class="home-list-item"><b>${qi+1}. ${esc(q.q)}</b><span>${esc(q.h||'필요한 서류를 전부 고르세요. 하나라도 빠지면 다음으로 못 갑니다.')}</span>
+                  <div class="rpg-docs">${q.o.map((o,oi)=>{
+                    const sel=picked.includes(oi);
+                    const cls=touched?sel?(req.includes(oi)?'good':'bad'):req.includes(oi)?'bad':'':'';
+                    return `<button class="rpg-doc ${sel?'sel':''} ${cls}" onclick="rpgDocToggle(${qi},${oi})">${sel?'☑':'☐'} ${esc(o)}</button>`;
+                  }).join('')}</div>
+                  ${touched?`<div class="rpg-doc-note">${exact?'✅ 서류 세트 완성':'❌ 필요한 서류를 전부 고르고, 불필요한 서류는 빼야 해요.'} · ${esc(q.e)}</div>`:''}</div>`;
+              }
+              return `<div class="home-list-item"><b>${qi+1}. ${esc(q.q)}</b><span>${esc(q.h||'')}</span>
+                <div class="rpg-choices">${q.o.map((o,oi)=>`<button class="rpg-choice ${rpgState.answers[qi]===oi?(oi===q.a?'good':'bad'):''}" onclick="rpgAnswer(${qi},${oi})"><b>${esc(o)}</b></button>`).join('')}</div>
+                ${rpgState.answers[qi]!=null?`<div class="small">${rpgState.answers[qi]===q.a?'✅ 정답':'❌ 다시 골라봐'} · ${esc(q.e)}</div>`:''}</div>`;
+            }).join('');
+            return `<div class="rpg-card rpg-mission-card" style="margin-top:10px">
+              <div class="sim-phase">🔐 다음 단계 잠금해제 미션</div>
+              <div class="rpg-scene">서류 선택 문제는 필요한 서류를 전부 골라야 하고, 공식·개념 문제까지 5개를 모두 맞히면 다음 단계로 진행됩니다.</div>
+              <div class="rpg-gate-progress">${solved.map(x=>`<span class="rpg-gate-dot ${x?'done':''}"></span>`).join('')}</div>
+              <div class="rpg-choices">${rows}</div>
+              <div class="sim-actions"><button class="btn primary" ${passed?'':'disabled'} onclick="rpgAdvance()">${passed?'다음 단계로':'5개 모두 맞히면 진행'}</button></div>
+            </div>`;
+          }
+          '''.strip()
+
+          RPG_QUIZ_FUNC = r'''
+          function rpgQuizFor(type,stageId){
+            const common=[
+              {q:'선금 지급 후 계약금액이 감액 변경되었다. 다음 정산 판단으로 가장 안전한 것은?',o:['변경계약 후 선금 잔액과 사용내역을 다시 맞춰 정산한다','처음 승인한 선금이므로 감액 변경과 무관하다','준공검사 때까지 선금 정산 검토를 전부 미룬다','업체가 사용계획서를 냈으면 보증기간은 확인하지 않아도 된다'],a:0,e:'선금은 계약금액·이행상황·사용내역과 맞물려 정산해야 합니다.',h:'선금은 지급 시점보다 이후 변경·정산이 함정입니다.'},
+              {q:'검사 결과 일부 미흡하지만 사용은 가능하다. 대금 지급 판단으로 가장 적절한 것은?',o:['계약조건에 따라 보완·감액·부분검사 가능성을 검토하고 근거를 남긴다','사용 가능하므로 전액을 즉시 지급한다','검사조서 없이 담당자 메모만으로 지급한다','하자보수 단계로 넘기고 검사 단계 기록은 생략한다'],a:0,e:'검사 미흡은 보완, 감액, 부분검사 등 계약조건과 기록으로 처리해야 합니다.',h:'검사와 하자보수는 아무 때나 바꿔 끼우면 안 됩니다.'},
+              {q:'계약상대자가 자금난을 이유로 선금과 기성대가를 동시에 요구한다. 가장 먼저 구분할 것은?',o:['선금은 장래 이행 지원, 기성대가는 이미 이행한 부분의 대가라는 점','둘 다 업체 현금 지원이므로 같은 기준으로 지급한다','기성대가는 보증서만 있으면 검사 없이 지급한다','선금은 준공 후에만 신청할 수 있다'],a:0,e:'선금과 기성대가는 성격, 요건, 증빙이 다릅니다.',h:'돈을 준다는 점만 같고 법적 성격은 다릅니다.'}
+            ];
+            const formulaWork={q:'118억원 공사에서 누계 기성률 42%, 이미 지급한 기성대가가 37억 7,600만원이다. 이번에 추가로 인정할 기성대가 감각은?',o:['약 11억 7,600만원','약 49억 5,600만원','약 4억 9,560만원','약 37억 7,600만원'],a:0,e:'118억원 × 42% = 49억 5,600만원. 여기서 이미 지급한 37억 7,600만원을 빼면 11억 8,000만원 안팎입니다.',h:'누계 인정액 - 이미 지급액'};
+            const formulaSmall={q:'2,700만원 보수공사에서 준공검사 결과 8% 상당 보완분을 남겨야 한다. 보완 확인 전 지급 보류 감각은?',o:['216만원','270만원','21만6천원','2,160만원'],a:0,e:'2,700만원 × 8% = 216만원입니다. 10%로 성급히 계산하는 함정을 조심하세요.',h:'계약금액 × 보완비율'};
+            const formulaService={q:'4억 8천만원 용역에서 중간 산출물 35%를 인정하되 선금 6천만원 중 35%를 정산한다. 이번 중간대가 지급 감각은?',o:['1억 4,700만원','1억 6,800만원','2억 2,800만원','1억 2천만원'],a:0,e:'수행분 1억 6,800만원에서 선금 정산분 2,100만원을 빼면 1억 4,700만원입니다.',h:'수행분 - 선금 정산분'};
+            const formulaGoods={q:'1억 9천만원 물품계약에서 30% 선금을 지급했고, 납품검수 합격액이 70%다. 선금 정산을 같은 비율로 반영하면 이번 지급 감각은?',o:['9,310만원','1억 3,300만원','5,700만원','7,600만원'],a:0,e:'검수 합격액 1억 3,300만원에서 선금 정산 3,990만원을 빼면 9,310만원입니다.',h:'검수 합격액 - 선금 정산액'};
+            const docs={
+              work:[
+                {q:'공사 착공 전 제출된 착공계와 공정표의 착공일이 계약서와 다르다. 가장 적절한 처리?',o:['계약서상 착공 조건과 일정 변경 필요 여부를 확인하고 보완시킨다','현장 투입이 급하므로 착공일부터 먼저 인정한다','공정표는 참고자료이므로 계약서와 달라도 무시한다','기성검사 때 한꺼번에 수정한다'],a:0,e:'착공 기준일은 지체, 기성, 준공 일정과 연결되므로 초기에 맞춰야 합니다.'},
+                {q:'장기 공사에서 업체가 “30일마다 무조건 기성금을 달라”고 주장한다. 옳은 판단은?',o:['30일마다 검토 가능하더라도 실제 기성부분 확인과 청구서류가 필요하다','30일이 지나면 검사 없이 자동 지급한다','준공 전에는 어떤 경우도 지급할 수 없다','선금이 있으면 기성대가는 지급할 수 없다'],a:0,e:'30일 주기 감각은 자동지급이 아니라 기성부분 확인과 연결됩니다.'},
+                formulaWork
+              ],
+              service:[
+                {q:'용역 과업지시서에는 “보고서 제출”만 있고 산출물 수준·검사기준이 없다. 가장 큰 위험은?',o:['완료검사와 대가 지급 시 이행 여부 판단이 흔들린다','입찰보증금률이 자동으로 높아진다','계약보증금이 필요 없어지는 문제가 생긴다','하자담보 기간이 항상 사라진다'],a:0,e:'용역은 산출물과 검사기준이 모호하면 완료검사 단계가 흔들립니다.'},
+                {q:'중간보고는 했지만 계약서에 분할지급 조건이 명확하지 않다. 가장 안전한 판단은?',o:['계약조건과 수행부분 확인 근거를 먼저 검토한다','중간보고만 있으면 전액 지급한다','입찰공고문을 삭제하고 지급한다','검수조서 없이 회의록만으로 충분하다'],a:0,e:'중간대가는 계약조건, 수행부분, 산출물 확인이 같이 필요합니다.'},
+                formulaService
+              ],
+              goods:[
+                {q:'납품 수량은 맞지만 규격서 요구 성능 중 일부 시험성적서가 빠졌다. 지급 전 판단은?',o:['검수 합격 근거가 부족하므로 보완 또는 부적합 처리를 검토한다','수량이 맞으므로 전액 지급한다','시험성적서는 하자보수 때 받으면 된다','선금 정산자료만 있으면 검수조서는 불필요하다'],a:0,e:'물품 검수는 수량뿐 아니라 규격 적합성까지 봐야 합니다.'},
+                {q:'특정 모델명으로 규격을 잡았지만 “동등 이상” 문구만 넣었다. 여전히 남는 위험은?',o:['동등 이상 판단 기준이 불명확하면 경쟁 제한 논란이 남는다','모델명을 넣으면 항상 수의계약이 된다','동등 이상 문구가 있으면 사전규격공개가 금지된다','검수 단계에서 계약보증금이 사라진다'],a:0,e:'동등 이상 문구만으로 충분하지 않고 판단 기준과 사전검토가 필요합니다.'},
+                formulaGoods
+              ]
+            };
+            const byStage=[
+              {q:'예산은 확보됐지만 추정가격 산정근거가 부가세 포함 금액으로만 정리돼 있다. 계약방법 판단 전 조치로 맞는 것은?',o:['부가세 제외 기준 등 판단 기준에 맞게 추정가격을 다시 정리한다','포함 금액이 더 크므로 그대로 제한경쟁을 선택한다','예산액과 추정가격은 항상 같으므로 검토하지 않는다','계약 후 정산 때 추정가격을 새로 만든다'],a:0,e:'계약방법과 기준금액 판단은 추정가격 기준을 정확히 잡아야 합니다.'},
+              {q:'계약 변경 사유가 발생했지만 금액 증감은 작다. 가장 위험한 판단은?',o:['금액이 작으니 구두 승인으로 처리한다','변경 사유와 금액·기간 영향을 문서로 남긴다','계약상대자 귀책 여부를 확인한다','변경계약 필요 여부를 검토한다'],a:0,e:'금액이 작아도 변경 사유와 근거를 남기지 않으면 분쟁이 됩니다.'}
+            ];
+            const formula=type==='service'?formulaService:type==='goods'?formulaGoods:type==='workSmall'?formulaSmall:formulaWork;
+            const docQ=rpgDocQuestionFor(type,stageId);
+            const rest=shuffle([...(docs[type]||docs.work),...common,...byStage].filter(q=>q!==formula));
+            return shuffle([docQ,formula,...rest.slice(0,3)]).map(rpgShuffleQuestion);
+          }
+          '''.strip()
+
+          def upsert_marked(text, start_marker, end_marker, block):
+              pattern = re.compile(r"\n?" + re.escape(start_marker) + r".*?" + re.escape(end_marker), re.S)
+              if pattern.search(text):
+                  return pattern.sub("\n" + block, text)
+              return text.replace("</style>", block + "\n</style>", 1)
+
+          def replace_between(text, start, end, replacement):
+              i = text.find(start)
+              if i < 0:
+                  raise RuntimeError(f"start marker not found: {start}")
+              j = text.find(end, i)
+              if j < 0:
+                  raise RuntimeError(f"end marker not found: {end}")
+              return text[:i] + replacement.rstrip() + "\n" + text[j:]
+
+          for filename in ["index.html", "study_app_latest.html"]:
+              path = Path(filename)
+              text = path.read_text(encoding="utf-8")
+              text = upsert_marked(text, "/* codex local pending overrides start */", "/* codex local pending overrides end */", LOCAL_PENDING_CSS)
+              text = upsert_marked(text, "/* codex practical game skin start */", "/* codex practical game skin end */", GAME_CSS)
+              text = re.sub(r'(<div class="home-panel)(">\s*\n\s*<div class="home-titleline"><h3>여기까지 했어요!</h3>)', r'\1 study-summary-panel\2', text, count=1)
+              if "function rpgScenarioAvatar(type){" not in text:
+                  anchor = "function loadRpgSummaries(){try{return JSON.parse(localStorage.getItem('procurement_rpg_summaries_v1')||'[]')}catch(e){return[]}}\n"
+                  text = text.replace(anchor, anchor + RPG_HELPERS + "\n", 1)
+              text = replace_between(text, "function renderRpg(){", "function renderRpgResult(result){", RPG_RENDER_FUNCS)
+              text = replace_between(text, "function renderRpgGate(){", "function renderRpgSavedSummary(){", RPG_GATE_FUNC)
+              text = replace_between(text, "function rpgQuizFor(type,stageId){", "function clamp", RPG_QUIZ_FUNC)
+              path.write_text(text, encoding="utf-8")
+
+          Path(".codex-last-override.txt").write_text("practical RPG polish applied\n", encoding="utf-8")
+          PY
+      - name: Commit polished files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .codex-last-override.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Apply practical RPG polish"
+            git push
+          fi
