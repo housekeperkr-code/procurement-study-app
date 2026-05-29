@@ -1,1 +1,1 @@
-Trigger fixed iPad override workflow at 2026-05-29 14:00 KST.
+Trigger dashboard layout update at 2026-05-29 14:20 KST.
