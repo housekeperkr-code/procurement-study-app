@@ -1,1 +1,1 @@
-title subtitles inline checked
+title subtitle top aligned
