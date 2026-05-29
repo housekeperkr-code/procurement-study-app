@@ -1,0 +1,49 @@
+name: Fix title subtitle alignment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .title-align-trigger.txt
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-title-align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Align title subtitles
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              ".wrap>.title{display:inline-flex;align-items:baseline;margin:0 14px 18px 0;vertical-align:baseline}": ".wrap>.title{display:inline-flex;align-items:baseline;margin:0 14px 18px 0;vertical-align:top}",
+              ".wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 310px));margin:0 0 18px;vertical-align:baseline}": ".wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 310px));margin:0 0 18px;padding-top:4px;vertical-align:top}",
+              ".wrap>.title{display:inline-flex;align-items:baseline;margin:0 16px 20px 0;vertical-align:baseline}": ".wrap>.title{display:inline-flex;align-items:baseline;margin:0 16px 20px 0;vertical-align:top}",
+              ".wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 330px));margin:0 0 20px;vertical-align:baseline}": ".wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 330px));margin:0 0 20px;padding-top:4px;vertical-align:top}",
+          }
+          for name in ["index.html", "study_app_latest.html", ".github/workflows/apply-ipad-overrides.yml"]:
+              path = Path(name)
+              if not path.exists():
+                  continue
+              text = path.read_text(encoding="utf-8")
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
+          Path(".codex-last-override.txt").write_text("title subtitle top aligned\n", encoding="utf-8")
+          PY
+      - name: Commit aligned files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .github/workflows/apply-ipad-overrides.yml .codex-last-override.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Top-align section subtitles"
+            git push
+          fi
