@@ -38,8 +38,8 @@ jobs:
             .wrap{width:min(1180px,calc(100% - 64px));padding:34px 32px 96px}
             .title{font-size:26px}
             .sub{font-size:15.5px;line-height:1.78}
-            .wrap>.title{display:inline-flex;align-items:baseline;margin:0 16px 20px 0;vertical-align:baseline}
-            .wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 330px));margin:0 0 20px;vertical-align:baseline}
+            .wrap>.title{display:inline-flex;align-items:baseline;margin:0 16px 20px 0;vertical-align:top}
+            .wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 330px));margin:0 0 20px;padding-top:4px;vertical-align:top}
             .cat-btn{font-size:15px;padding:0 22px}
             .tab-btn{font-size:15px;padding:0 20px}
             .btn,.problem-tab,.num-chip,.subject-chip{font-size:14.8px}
@@ -106,7 +106,7 @@ jobs:
                   text = text.replace("#homeRoot .dday-card.next{outline:1px solid #ffffff22}", DDAY_CSS, 1)
               text = card_line.sub(TONES_JS, text, count=1)
               path.write_text(text, encoding="utf-8")
-          Path(".codex-last-override.txt").write_text("title subtitles inline checked\n", encoding="utf-8")
+          Path(".codex-last-override.txt").write_text("title subtitle top aligned\n", encoding="utf-8")
           PY
       - name: Commit patched files
         run: |
