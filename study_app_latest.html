@@ -474,6 +474,39 @@ table{width:100%;border-collapse:collapse;background:var(--panel);border:1px sol
 th,td{border-top:1px solid var(--line);padding:10px;text-align:left;font-size:12.5px;line-height:1.6;vertical-align:top}
 th{border-top:0;color:#9fb2ca;background:#111722}
 @media(max-width:640px){.law-row{grid-template-columns:1fr}.title{font-size:18px}.cat-btn{padding:0 11px}.tab-btn{padding:0 9px}.wrap{padding:16px 12px 56px}.card,.qcard,.num-card,.cram-card,.blank-card,.weak-card,.compare-card,.change-card,.check-item,.home-panel,.topic-card,.prac-card,.sim-panel{padding:12px}}
+/* codex ipad overrides start */
+@media(min-width:768px){
+  #tabbar{padding-left:max(48px,calc((100vw - 1180px)/2 + 16px));padding-right:max(48px,calc((100vw - 1180px)/2 + 16px))}
+  #subtabbar{padding-left:max(51px,calc((100vw - 1180px)/2 + 19px));padding-right:max(51px,calc((100vw - 1180px)/2 + 19px))}
+  .wrap{width:min(1180px,calc(100% - 64px));padding:30px 30px 92px}
+  .title{font-size:24px}
+  .sub{font-size:14.5px;line-height:1.75}
+  .cat-btn{font-size:14px}
+  .tab-btn{font-size:13.5px}
+  .btn,.problem-tab,.num-chip,.subject-chip{font-size:13.8px}
+  .card h3,.home-panel h3,.weak-card h3{font-size:15px}
+  .card p,.card li,.law-v,.num-card .desc,.cram-answer,.blank-answer,.compare-side p,.change-box p,.check-desc,.prac-case,.prac-ask,.prac-answer,.sim-desc,.sim-q{font-size:13.7px;line-height:1.75}
+  .qtitle,.blank-prompt,.prac-title,.compare-title,.change-title,.check-title{font-size:15.3px;line-height:1.7}
+  .opt,.sim-choice,.rpg-choice,.rpg-doc{font-size:13.8px;line-height:1.6}
+  .explain,.blank-result,.compare-point,.compare-trap,.change-note,.check-progress,.sim-feedback{font-size:13.4px;line-height:1.7}
+  .home-big{font-size:20px}
+  .home-muted,.small,.home-list-item span,.weak-tip,.change-source,.check-warn,.num-card .memo,.cram-hint{font-size:12.8px;line-height:1.65}
+  .home-flow-row b,.home-flow-row span{font-size:13.2px}
+  #homeRoot .dday-card b{font-size:28px}
+  #homeRoot .dday-card strong{font-size:14.5px}
+  #homeRoot .dday-card span{font-size:12.5px}
+  .visit-count{font-size:20px}
+  .law-k,.filter-label,.sim-phase,.rpg-case b,.rpg-doc-note{font-size:12.2px}
+  .law-name,.topic-title,.rpg-scene,.sim-feedback h4{font-size:14.5px}
+  .topic-desc,.sim-info p,.rpg-dialog,.rpg-result,.rpg-hint,.rpg-log-item{font-size:13px;line-height:1.65}
+  th,td{font-size:13.4px;line-height:1.65}
+  .home-board{gap:14px;margin:16px 0}
+  .grid,.num-list,.cram-list,.weak-grid,.topic-list,.prac-list,.sim-grid,.compare-list,.change-list,.check-list,.blank-list,.home-list{gap:14px}
+  .modebar,.num-filter,.subject-tabs,.prac-toolbar{margin:18px 0 20px}
+  #homeRoot .home-panel,#homeRoot .dday-card{padding:22px}
+  #homeRoot .home-titleline{margin-bottom:22px}
+}
+/* codex ipad overrides end */
 </style>
 </head>
 <body>
