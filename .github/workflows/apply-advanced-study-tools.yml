@@ -24,23 +24,25 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
-          old_head = "const codexOriginalRpgQuizFor = rpgQuizFor;\n          function rpgQuizFor(type,stageId){const items=codexOriginalRpgQuizFor(type,stageId);"
-          new_head = "var codexOriginalRpgQuizFor = rpgQuizFor;\n          rpgQuizFor=function(type,stageId){const items=codexOriginalRpgQuizFor(type,stageId);"
-          old_tail = "return shuffle(pool.slice(0,rpgDifficultyInfo().count)).map(rpgShuffleQuestion);}\n\n          function buildWrongDrillQuestions"
-          new_tail = "return shuffle(pool.slice(0,rpgDifficultyInfo().count)).map(rpgShuffleQuestion);};\n\n          function buildWrongDrillQuestions"
+          head = re.compile(r"const\s+codexOriginalRpgQuizFor\s*=\s*rpgQuizFor;\s*function\s+rpgQuizFor\(type,stageId\)\{const\s+items\s*=\s*codexOriginalRpgQuizFor\(type,stageId\);")
+          tail = re.compile(r"return\s+shuffle\(pool\.slice\(0,rpgDifficultyInfo\(\)\.count\)\)\.map\(rpgShuffleQuestion\);\}\s*function\s+buildWrongDrillQuestions")
+          new_head = "var codexOriginalRpgQuizFor = rpgQuizFor;\nrpgQuizFor=function(type,stageId){const items=codexOriginalRpgQuizFor(type,stageId);"
+          new_tail = "return shuffle(pool.slice(0,rpgDifficultyInfo().count)).map(rpgShuffleQuestion);};\n\nfunction buildWrongDrillQuestions"
 
           changed = False
           for name in ["index.html", "study_app_latest.html"]:
               p = Path(name)
               text = p.read_text(encoding="utf-8")
-              text2 = text.replace(old_head, new_head).replace(old_tail, new_tail)
+              text2 = head.sub(new_head, text)
+              text2 = tail.sub(new_tail, text2)
               if text2 != text:
                   p.write_text(text2, encoding="utf-8")
                   changed = True
 
           Path(".codex-last-override.txt").write_text(
-              "advanced study tools fixed\n" if changed else "advanced study tools already fixed\n",
+              "advanced study tools fixed flexible\n" if changed else "advanced study tools flexible no-op\n",
               encoding="utf-8"
           )
           PY
