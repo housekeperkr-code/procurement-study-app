@@ -1,1 +1,1 @@
-ipad dashboard overrides checked
+responsive dashboard row checked
