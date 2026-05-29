@@ -1,1 +1,1 @@
-ipad text spacing overrides checked
+ipad dashboard overrides checked
