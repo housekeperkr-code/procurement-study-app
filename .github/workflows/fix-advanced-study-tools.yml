@@ -1,0 +1,48 @@
+name: Fix advanced study tools
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .advanced-tools-fix-trigger.txt
+      - .github/workflows/fix-advanced-study-tools.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix RPG quiz override
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          pattern = re.compile(r"const codexOriginalRpgQuizFor = rpgQuizFor;\n\s*function rpgQuizFor\(type,stageId\)\{const items=codexOriginalRpgQuizFor\(type,stageId\);(?P<body>.*?)return shuffle\(pool\.slice\(0,rpgDifficultyInfo\(\)\.count\)\)\.map\(rpgShuffleQuestion\);\}", re.S)
+          replacement = "var codexOriginalRpgQuizFor = rpgQuizFor;\n          rpgQuizFor=function(type,stageId){const items=codexOriginalRpgQuizFor(type,stageId);\\g<body>return shuffle(pool.slice(0,rpgDifficultyInfo().count)).map(rpgShuffleQuestion);};"
+
+          for name in ["index.html", "study_app_latest.html", ".github/workflows/apply-advanced-study-tools.yml"]:
+              p=Path(name)
+              if not p.exists():
+                  continue
+              text=p.read_text(encoding="utf-8")
+              text2=pattern.sub(replacement, text)
+              p.write_text(text2, encoding="utf-8")
+
+          Path(".codex-last-override.txt").write_text("advanced study tools fixed\n", encoding="utf-8")
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .github/workflows/apply-advanced-study-tools.yml .codex-last-override.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Fix advanced study tools"
+            git push
+          fi
