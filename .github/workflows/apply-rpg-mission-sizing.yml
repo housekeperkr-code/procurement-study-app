@@ -1,0 +1,65 @@
+name: Apply RPG mission sizing
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .rpg-size-trigger.txt
+      - .github/workflows/apply-rpg-mission-sizing.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-rpg-mission-sizing
+  cancel-in-progress: false
+
+jobs:
+  apply-sizing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch RPG mission sizing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          CSS = r'''
+          /* codex rpg mission sizing start */
+          #flowsim .rpg-mission-card .home-list-item>b{font-size:17px;line-height:1.55}
+          #flowsim .rpg-mission-card .home-list-item>span{font-size:14px;line-height:1.55}
+          #flowsim .rpg-mission-card .rpg-choices{gap:8px}
+          #flowsim .rpg-mission-card .rpg-choice,#flowsim .rpg-mission-card .rpg-doc{border-radius:14px;padding:9px 12px;box-shadow:0 4px 0 #111217;min-height:0}
+          #flowsim .rpg-mission-card .rpg-choice::before{width:26px;height:26px;border-radius:9px}
+          #flowsim .rpg-mission-card .rpg-choice b{font-size:15px;line-height:1.35;margin:0}
+          #flowsim .rpg-mission-card .rpg-doc{font-size:14.5px;line-height:1.35}
+          /* codex rpg mission sizing end */
+          '''.strip()
+
+          def upsert(text):
+              pattern = re.compile(r"\n?/\* codex rpg mission sizing start \*/.*?/\* codex rpg mission sizing end \*/", re.S)
+              if pattern.search(text):
+                  return pattern.sub("\n" + CSS, text)
+              if "/* codex practical game skin end */" in text:
+                  return text.replace("/* codex practical game skin end */", CSS + "\n/* codex practical game skin end */", 1)
+              return text.replace("</style>", CSS + "\n</style>", 1)
+
+          for name in ["index.html", "study_app_latest.html"]:
+              p = Path(name)
+              p.write_text(upsert(p.read_text(encoding="utf-8")), encoding="utf-8")
+
+          Path(".codex-last-override.txt").write_text("rpg mission sizing applied\n", encoding="utf-8")
+          PY
+      - name: Commit mission sizing
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .codex-last-override.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Adjust RPG mission sizing"
+            git push
+          fi
