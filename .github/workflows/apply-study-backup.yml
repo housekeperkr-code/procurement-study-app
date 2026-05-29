@@ -1,0 +1,138 @@
+name: Apply study backup tools
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .backup-trigger.txt
+      - .github/workflows/apply-study-backup.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-study-backup
+  cancel-in-progress: false
+
+jobs:
+  apply-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch study backup tools
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          CSS = r'''
+          /* codex backup tools start */
+          #homeRoot .backup-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+          #homeRoot .backup-actions .btn{padding:8px 12px;min-height:0}
+          #homeRoot .backup-status{font-size:11px;line-height:1.5;color:var(--muted)}
+          .backup-input{display:none}
+          /* codex backup tools end */
+          '''.strip()
+
+          JS = r'''
+          function renderBackupControls(root){
+            const panel=root.querySelector('.study-summary-panel');
+            if(!panel || panel.querySelector('.backup-actions'))return;
+            const backup=document.createElement('div');
+            backup.className='backup-actions';
+            backup.innerHTML=`
+              <button class="btn" onclick="exportStudyBackup()">진도 백업</button>
+              <button class="btn" onclick="document.getElementById('studyBackupFile').click()">가져오기</button>
+              <input id="studyBackupFile" class="backup-input" type="file" accept=".json,application/json" onchange="importStudyBackup(this)">
+              <span id="backupStatus" class="backup-status">패드/PC 기록 옮길 때 사용</span>
+            `;
+            panel.appendChild(backup);
+          }
+          function collectStudyBackup(){
+            const keys={};
+            for(let i=0;i<localStorage.length;i++){
+              const key=localStorage.key(i);
+              if(key && key.startsWith('procurement_'))keys[key]=localStorage.getItem(key);
+            }
+            return {app:'procurement-study-app',version:1,exportedAt:new Date().toISOString(),keys};
+          }
+          function exportStudyBackup(){
+            const payload=collectStudyBackup();
+            const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+            const url=URL.createObjectURL(blob);
+            const a=document.createElement('a');
+            const day=new Date().toISOString().slice(0,10).replace(/-/g,'');
+            a.href=url;
+            a.download=`procurement-study-backup-${day}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(()=>URL.revokeObjectURL(url),1000);
+            setBackupStatus('백업 파일을 만들었어요.');
+          }
+          function importStudyBackup(input){
+            const file=input.files && input.files[0];
+            if(!file)return;
+            const reader=new FileReader();
+            reader.onload=()=>{
+              try{
+                const data=JSON.parse(reader.result);
+                if(!data || data.app!=='procurement-study-app' || !data.keys || typeof data.keys!=='object')throw new Error('bad backup');
+                if(!confirm('지금 기기의 공부 기록을 백업 파일 기록으로 바꿀까요?'))return;
+                Object.keys(localStorage).filter(key=>key.startsWith('procurement_')).forEach(key=>localStorage.removeItem(key));
+                Object.entries(data.keys).forEach(([key,value])=>{
+                  if(key.startsWith('procurement_'))localStorage.setItem(key,String(value));
+                });
+                alert('가져왔어요. 화면을 새로 불러올게요.');
+                location.reload();
+              }catch(e){
+                alert('이 파일은 학습앱 백업 파일이 아닌 것 같아요.');
+                setBackupStatus('가져오기에 실패했어요.');
+              }finally{
+                input.value='';
+              }
+            };
+            reader.onerror=()=>{alert('파일을 읽지 못했어요.');input.value='';};
+            reader.readAsText(file);
+          }
+          function setBackupStatus(msg){
+            const el=document.getElementById('backupStatus');
+            if(el)el.textContent=msg;
+          }
+          '''.strip()
+
+          def patch_css(text):
+              text = re.sub(r"\n?/\* codex backup tools start \*/.*?/\* codex backup tools end \*/", "", text, flags=re.S)
+              target = "/* codex local pending overrides end */"
+              if target in text:
+                  return text.replace(target, CSS + "\n" + target, 1)
+              return text.replace("/* codex practical game skin start */", CSS + "\n/* codex practical game skin start */", 1)
+
+          def patch_js(text):
+              text = re.sub(r"\n?function renderBackupControls\(root\)\{.*?\nfunction homeRecommendation", "\n" + JS + "\nfunction homeRecommendation", text, flags=re.S)
+              if "renderBackupControls(root);" not in text:
+                  needle = "    `;\n}\nfunction homeRecommendation"
+                  text = text.replace(needle, "    `;\n  renderBackupControls(root);\n}\n" + JS + "\nfunction homeRecommendation", 1)
+              return text
+
+          for name in ["index.html", "study_app_latest.html"]:
+              p=Path(name)
+              text=p.read_text(encoding="utf-8")
+              text=patch_css(text)
+              text=patch_js(text)
+              p.write_text(text, encoding="utf-8")
+
+          Path(".codex-last-override.txt").write_text("study backup tools applied\n", encoding="utf-8")
+          PY
+      - name: Commit study backup tools
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .codex-last-override.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add study backup tools"
+            git push
+          fi
