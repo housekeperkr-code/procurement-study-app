@@ -1,1 +1,1 @@
-dashboard height alignment checked
+title subtitles inline checked
