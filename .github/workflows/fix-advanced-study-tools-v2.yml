@@ -1,0 +1,52 @@
+name: Fix advanced study tools v2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .advanced-tools-fix-v2-trigger.txt
+      - .github/workflows/fix-advanced-study-tools-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix-tools-v2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix RPG quiz override safely
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          old_head = "const codexOriginalRpgQuizFor = rpgQuizFor;\n          function rpgQuizFor(type,stageId){const items=codexOriginalRpgQuizFor(type,stageId);"
+          new_head = "var codexOriginalRpgQuizFor = rpgQuizFor;\n          rpgQuizFor=function(type,stageId){const items=codexOriginalRpgQuizFor(type,stageId);"
+          old_tail = "return shuffle(pool.slice(0,rpgDifficultyInfo().count)).map(rpgShuffleQuestion);}\n\n          function buildWrongDrillQuestions"
+          new_tail = "return shuffle(pool.slice(0,rpgDifficultyInfo().count)).map(rpgShuffleQuestion);};\n\n          function buildWrongDrillQuestions"
+
+          changed = False
+          for name in ["index.html", "study_app_latest.html", ".github/workflows/apply-advanced-study-tools.yml"]:
+              p=Path(name)
+              if not p.exists():
+                  continue
+              text=p.read_text(encoding="utf-8")
+              text2=text.replace(old_head,new_head).replace(old_tail,new_tail)
+              if text2 != text:
+                  changed = True
+                  p.write_text(text2, encoding="utf-8")
+
+          Path(".codex-last-override.txt").write_text(("advanced study tools fixed v2\n" if changed else "advanced study tools fix v2 no-op\n"), encoding="utf-8")
+          PY
+      - name: Commit fix v2
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .github/workflows/apply-advanced-study-tools.yml .codex-last-override.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Fix advanced study tools v2"
+            git push
+          fi
