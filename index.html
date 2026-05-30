@@ -4,64 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>자격증 학습앱 ✏️</title>
-<style>
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8f4ec;color:#243326;font-family:Arial,"Noto Sans KR",sans-serif}
-.box{width:min(420px,calc(100% - 40px));padding:24px;border-radius:18px;background:#fff;text-align:center;box-shadow:0 14px 36px rgba(28,42,31,.12)}
-b{display:block;font-size:18px;margin-bottom:8px}
-p{margin:0;color:#66705f;font-size:13px;line-height:1.6}
-/* codex ipad overrides start */
-@media(min-width:768px){
-  #tabbar{height:56px;gap:10px;padding-left:max(50px,calc((100vw - 1180px)/2 + 18px));padding-right:max(50px,calc((100vw - 1180px)/2 + 18px))}
-  #subtabbar{inset:56px 0 auto 0;height:52px;gap:12px;padding-left:max(53px,calc((100vw - 1180px)/2 + 21px));padding-right:max(53px,calc((100vw - 1180px)/2 + 21px))}
-  .tab-content{inset:108px 0 0 0}
-  .wrap{width:min(1180px,calc(100% - 64px));padding:34px 32px 96px}
-  .title{font-size:26px}
-  .sub{font-size:15.5px;line-height:1.78}
-  .wrap>.title{display:inline-flex;align-items:baseline;margin:0 16px 20px 0;vertical-align:top}
-  .wrap>.sub{display:inline-block;max-width:min(760px,calc(100% - 330px));margin:0 0 20px;padding-top:4px;vertical-align:top}
-  .cat-btn{font-size:15px;padding:0 22px}
-  .tab-btn{font-size:15px;padding:0 20px}
-  .btn,.problem-tab,.num-chip,.subject-chip{font-size:14.8px}
-  .card h3,.home-panel h3,.weak-card h3{font-size:16px}
-  .card p,.card li,.law-v,.num-card .desc,.cram-answer,.blank-answer,.compare-side p,.change-box p,.check-desc,.prac-case,.prac-ask,.prac-answer,.sim-desc,.sim-q{font-size:14.7px;line-height:1.78}
-  .qtitle,.blank-prompt,.prac-title,.compare-title,.change-title,.check-title{font-size:16.3px;line-height:1.72}
-  .opt,.sim-choice,.rpg-choice,.rpg-doc{font-size:14.8px;line-height:1.65}
-  .explain,.blank-result,.compare-point,.compare-trap,.change-note,.check-progress,.sim-feedback{font-size:14.4px;line-height:1.72}
-  .home-big{font-size:21px}
-  .home-muted,.small,.home-list-item span,.weak-tip,.change-source,.check-warn,.num-card .memo,.cram-hint{font-size:13.8px;line-height:1.68}
-  .home-flow-row b,.home-flow-row span{font-size:14.2px}
-  #homeRoot .dday-card b{font-size:clamp(21px,2.6vw,30px)}
-  #homeRoot .dday-card strong{font-size:clamp(13px,1.5vw,15.5px)}
-  #homeRoot .dday-card span{font-size:clamp(11px,1.3vw,13.5px)}
-  .visit-count{font-size:21px}
-  .law-k,.filter-label,.sim-phase,.rpg-case b,.rpg-doc-note{font-size:13.2px}
-  .law-name,.topic-title,.rpg-scene,.sim-feedback h4{font-size:15.5px}
-  .topic-desc,.sim-info p,.rpg-dialog,.rpg-result,.rpg-hint,.rpg-log-item{font-size:14px;line-height:1.68}
-  th,td{font-size:14.4px;line-height:1.68}
-  .home-board{gap:16px;margin:18px 0}
-  #homeRoot .home-board.home-topline{--visit-size:clamp(178px,22vw,224px);--top-gap:16px;grid-template-columns:var(--visit-size) minmax(0,calc(100% - var(--visit-size) - var(--top-gap)));gap:var(--top-gap);align-items:stretch;justify-content:start}
-  #homeRoot .visit-panel{width:var(--visit-size);height:var(--visit-size);flex-basis:var(--visit-size);padding:clamp(14px,2vw,20px)}
-  #homeRoot .visit-icon-img{width:clamp(80px,10vw,108px);height:clamp(80px,10vw,108px)}
-  #homeRoot .dday-panel{width:100%;max-width:100%;padding:0;background:transparent;min-width:0}
-  #homeRoot .dday-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-flow:column;gap:clamp(10px,1.4vw,16px);height:var(--visit-size);min-width:0}
-  #homeRoot .dday-card{aspect-ratio:auto;min-width:0;min-height:0;height:100%;align-content:center;gap:clamp(8px,1.2vw,14px)}
-  .grid,.num-list,.cram-list,.weak-grid,.topic-list,.prac-list,.sim-grid,.compare-list,.change-list,.check-list,.blank-list,.home-list{gap:16px}
-  .modebar,.num-filter,.subject-tabs,.prac-toolbar{gap:12px;margin:20px 0 22px}
-  #homeRoot .home-panel:not(.dday-panel){padding:24px}
-  #homeRoot .dday-panel{padding:0}
-  #homeRoot .dday-card{padding:clamp(12px,1.6vw,20px)}
-  #homeRoot .home-titleline{margin-bottom:24px}
-  .card,.qcard,.num-card,.cram-card,.blank-card,.weak-card,.compare-card,.change-card,.check-item,.home-panel,.topic-card,.prac-card,.sim-panel,.rpg-card,.law-block,.pixel-hero,.cutscene,.dday-card,table{border-radius:18px}
-  .home-metric div,.home-list-item,.cram-kpi div,.blank-status div,.weak-summary div,.compare-side,.change-box,.sim-info,.sim-desc,.sim-feedback,.prac-case,.prac-answer,.formula,.explain,.blank-answer,.blank-result,.change-note,.check-progress,.rpg-case div,.rpg-stats div,.rpg-dialog,.rpg-choice,.rpg-doc,.rpg-result,.rpg-hint,.rpg-log-item{border-radius:14px}
-  #homeRoot .dday-panel{border-radius:0}
-}
-/* codex ipad overrides end */
-</style>
 </head>
-<body>
-<main class="box">
-  <b>자격증 학습앱 불러오는 중</b>
-  <p>잠깐만 기다려줘. 최신 화면을 여는 중이야.</p>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#f8f4ec;color:#243326;font-family:Arial,'Noto Sans KR',sans-serif">
+<main style="width:min(420px,calc(100% - 40px));padding:24px;border-radius:18px;background:#fff;text-align:center;box-shadow:0 14px 36px rgba(28,42,31,.12)">
+  <b style="display:block;font-size:18px;margin-bottom:8px">자격증 학습앱 불러오는 중</b>
+  <p style="margin:0;color:#66705f;font-size:13px;line-height:1.6">잠깐만 기다려줘. 최신 화면을 여는 중이야.</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 <script>
@@ -83,7 +30,7 @@ p{margin:0;color:#66705f;font-size:13px;line-height:1.6}
   document.write(html);
   document.close();
 })().catch(err => {
-  document.body.innerHTML = '<main class="box"><b>앱을 못 불러왔어</b><p>새로고침해보고, 계속 안 되면 주소 뒤 캐시 이름을 바꿔서 열어줘.<br>' + err.message + '</p></main>';
+  document.body.innerHTML = '<main style="width:min(420px,calc(100% - 40px));margin:20vh auto 0;padding:24px;border-radius:18px;background:#fff;text-align:center;font-family:Arial,sans-serif"><b>앱을 못 불러왔어</b><p style="font-size:13px;color:#66705f;line-height:1.6">새로고침해보고, 계속 안 되면 주소 뒤 캐시 이름을 바꿔서 열어줘.<br>' + err.message + '</p></main>';
 });
 </script>
 </body>
