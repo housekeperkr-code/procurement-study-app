@@ -1,0 +1,49 @@
+name: Codex Apply Quiz 150 Bank
+
+on:
+  push:
+    paths:
+      - '.github/workflows/codex-apply-quiz150-bank.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply quiz bank update
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_expected="7fe8d92f16715228706e00ed8bf3d50836da771856ada3338a8946c5c1e96b21"
+          target_expected="5cd28732682e3ce6d00e92068cd18b1f5b9a55723516fde353d9ff3cf1cbf2e6"
+          current="$(sha256sum index.html | awk '{print $1}')"
+          if [ "$current" != "$base_expected" ] && [ "$current" != "$target_expected" ]; then
+            echo "Unexpected index.html checksum: $current"
+            exit 1
+          fi
+          if [ "$current" = "$base_expected" ]; then
+            cat > /tmp/quiz150.patch.gz.b64 <<'PATCH_B64'
+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
+PATCH_B64
+            base64 -d /tmp/quiz150.patch.gz.b64 | gunzip > /tmp/quiz150.patch
+            git apply /tmp/quiz150.patch
+          fi
+          cp index.html study_app_latest.html
+          test "$(sha256sum index.html | awk '{print $1}')" = "$target_expected"
+          test "$(sha256sum study_app_latest.html | awk '{print $1}')" = "$target_expected"
+          rm -f .github/workflows/codex-apply-quiz150-bank.yml .github/workflows/codex-apply-quiz50-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html study_app_latest.html .github/workflows/codex-apply-quiz150-bank.yml .github/workflows/codex-apply-quiz50-fix.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Expand quiz bank to 150 questions"
+          git push
