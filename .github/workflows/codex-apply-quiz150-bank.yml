@@ -1,7 +1,6 @@
 name: Codex Apply Quiz 150 Bank
 
 on:
-  push:
   workflow_dispatch:
 
 permissions:
