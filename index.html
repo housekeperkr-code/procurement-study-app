@@ -8918,6 +8918,275 @@ body{background:#eef0f3!important;color:var(--text);font-family:'Pretendard','Ap
 .study-bottom-nav{background:#ffffffee!important;border:1.5px solid #e7e8ec!important;box-shadow:0 10px 24px rgba(20,24,40,.10)!important}
 .study-bottom-nav .btn{background:#f7f8fa!important}
 </style>
+<style id="codex-overflow-cleanup">
+/* final text fit cleanup */
+html,body{
+  width:100%;
+  max-width:100%;
+}
+body,.tab-content{
+  overflow-x:hidden!important;
+}
+img,svg,canvas,video{
+  max-width:100%;
+  height:auto;
+}
+.wrap,
+.grid,
+.home-board,
+.home-hero-note,
+.home-mission,
+.flow-sim,
+.rpg-layout,
+.compare-grid,
+.change-grid,
+.cram-hero,
+#bookmap .book-grid,
+#subjectRoot .law-head,
+#flowsim .rpg-type-toolbar,
+#flowsim .rpg-difficulty-cards,
+#flowsim .rpg-save-stats,
+#flowsim .rpg-stage-map{
+  min-width:0!important;
+}
+.wrap>*,
+.grid>*,
+.home-board>*,
+.home-hero-note>*,
+.home-mission>*,
+.flow-sim>*,
+.rpg-layout>*,
+.compare-grid>*,
+.change-grid>*,
+.cram-hero>*,
+#bookmap .book-grid>*,
+#subjectRoot .law-head>*,
+#flowsim .rpg-type-toolbar>*,
+#flowsim .rpg-difficulty-cards>*,
+#flowsim .rpg-save-stats>*,
+#flowsim .rpg-stage-map>*{
+  min-width:0!important;
+}
+:where(
+  .card,.qcard,.num-card,.cram-card,.blank-card,.weak-card,.compare-card,.change-card,
+  .check-item,.home-panel,.topic-card,.prac-card,.sim-panel,.rpg-card,.law-block,
+  .home-choice,.home-note,.home-stat,.home-list-item,.dday-card,.compare-side,.change-box,
+  .sim-info,.sim-desc,.sim-q,.rpg-dialog,.rpg-hint,.rpg-log-item,.rpg-result,
+  .book-unit,.book-card,.book-support-item,.book-tree,.book-leaf,.book-node
+){
+  max-width:100%!important;
+  min-width:0!important;
+}
+:where(
+  .title,.sub,.card h3,.card p,.card li,.qtitle,.opt,.explain,.blank-prompt,.prac-title,
+  .compare-title,.change-title,.check-title,.law-name,.law-v,.topic-title,.topic-desc,
+  .home-big,.home-muted,.home-choice b,.home-choice small,.home-note,.home-scene p,
+  .num-card .big,.num-card .label,.num-card .desc,.num-card .memo,.formula,
+  .cram-q,.cram-hint,.cram-answer,.blank-answer,.blank-result,.weak-tip,
+  .sim-title,.sim-q,.sim-desc,.sim-choice,.rpg-scene,.rpg-dialog,.rpg-choice,.rpg-doc,
+  .rpg-result-copy b,.rpg-result-copy em,.rpg-gate-title b,.rpg-gate-title em,
+  .rpg-gate-copy b,.rpg-gate-copy em,.rpg-save-title b,.rpg-save-title em,
+  .rpg-save-memo b,.rpg-save-memo em,.rpg-cute-copy b,.rpg-cute-copy em,
+  #bookmap .tree-title,#bookmap .tree-note,#bookmap .tree-body,#bookmap .tree-inline-body,
+  #bookmap .book-unit-head h3,#bookmap .book-unit-head p,#bookmap .book-card p,#bookmap .book-card li
+){
+  min-width:0!important;
+  max-width:100%!important;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+.btn,
+.problem-tab,
+.num-chip,
+.subject-chip,
+.tag,
+.home-pill,
+.home-kicker,
+.law-subject,
+.rpg-save-rank,
+.rpg-gate-count,
+.rpg-gate-state,
+.rpg-cute-chip,
+#flowsim .rpg-result-copy .btn,
+.study-bottom-nav .btn{
+  max-width:100%!important;
+  min-width:0!important;
+  white-space:normal!important;
+  line-height:1.25!important;
+  text-align:center;
+}
+#tabbar .cat-btn,
+#subtabbar .tab-btn{
+  white-space:nowrap!important;
+  flex:0 0 auto!important;
+}
+.study-bottom-nav{
+  width:min(100%,720px)!important;
+  max-width:calc(100% - 24px)!important;
+  flex-wrap:wrap!important;
+}
+.study-bottom-nav .btn{
+  flex:1 1 128px!important;
+}
+#problems .qtitle{
+  grid-template-columns:minmax(1.8em,auto) minmax(0,1fr)!important;
+  column-gap:6px!important;
+  align-items:start!important;
+}
+#problems .qtitle-copy,
+#problems .opt-copy{
+  min-width:0!important;
+}
+#problems .opt{
+  grid-template-columns:1.4em minmax(0,1fr)!important;
+  column-gap:7px!important;
+  align-items:start!important;
+}
+#problems .opt-num{
+  text-align:center;
+}
+#numberRoot{
+  grid-template-columns:repeat(auto-fit,minmax(208px,1fr))!important;
+}
+#numberRoot .num-card{
+  min-width:0!important;
+}
+#numberRoot .num-card .big{
+  line-height:1.08!important;
+}
+#numberRoot .num-targets{
+  min-width:0!important;
+}
+#numberRoot .num-target-tag{
+  max-width:100%!important;
+}
+#numberRoot .formula{
+  white-space:normal!important;
+  text-overflow:clip!important;
+}
+#subjectRoot .law-head{
+  grid-template-columns:minmax(0,1fr) auto;
+}
+#subjectRoot .law-name{
+  min-width:0!important;
+}
+#subjectRoot .law-subject{
+  max-width:100%!important;
+}
+#bookmap .book-unit{
+  overflow:hidden;
+}
+#bookmap .book-node summary{
+  display:grid!important;
+  grid-template-columns:minmax(1.9em,var(--tree-no-w,44px)) minmax(0,1fr)!important;
+  column-gap:4px!important;
+  align-items:baseline!important;
+}
+#bookmap .book-leaf-line{
+  display:grid!important;
+  grid-template-columns:minmax(1.9em,var(--tree-no-w,44px)) minmax(0,max-content) minmax(0,1fr)!important;
+  column-gap:4px!important;
+  align-items:baseline!important;
+}
+#bookmap .tree-no{
+  min-width:0!important;
+  margin-right:0!important;
+}
+#bookmap .tree-title,
+#bookmap .tree-inline-body{
+  min-width:0!important;
+}
+#bookmap .tree-inline-body{
+  margin-left:0!important;
+}
+#bookmap .tree-body{
+  padding-left:calc(var(--tree-no-w,44px) + 4px)!important;
+}
+#flowsim .rpg-choice,
+#flowsim .rpg-doc,
+#flowsim .rpg-gate-card,
+#flowsim .rpg-save-card,
+#flowsim .rpg-result-card,
+#flowsim .rpg-cute-panel,
+#flowsim .rpg-type-card,
+#flowsim .rpg-difficulty-card{
+  min-width:0!important;
+  max-width:100%!important;
+}
+#flowsim .rpg-choice.choice-with-icon{
+  grid-template-columns:38px minmax(0,1fr)!important;
+}
+#flowsim .rpg-doc,
+#flowsim .rpg-choice{
+  white-space:normal!important;
+}
+#flowsim .rpg-gate-header,
+#flowsim .rpg-save-head,
+#flowsim .rpg-cute-panel,
+#flowsim .rpg-result-card{
+  grid-template-columns:minmax(38px,auto) minmax(0,1fr) auto!important;
+}
+@media(max-width:820px){
+  .home-hero-note,
+  .home-mission,
+  .flow-sim,
+  .rpg-layout,
+  .compare-grid,
+  .change-grid,
+  .cram-hero,
+  #bookmap .book-grid{
+    grid-template-columns:1fr!important;
+  }
+  #subjectRoot .law-head{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  #subjectRoot .law-subject{
+    justify-self:start!important;
+  }
+  #flowsim .rpg-gate-header,
+  #flowsim .rpg-save-head,
+  #flowsim .rpg-cute-panel,
+  #flowsim .rpg-result-card{
+    grid-template-columns:44px minmax(0,1fr)!important;
+  }
+  #flowsim .rpg-gate-count,
+  #flowsim .rpg-save-rank,
+  #flowsim .rpg-cute-chip{
+    grid-column:2!important;
+    justify-self:start!important;
+  }
+}
+@media(max-width:640px){
+  .wrap{
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+  #tabbar,
+  #subtabbar{
+    max-width:calc(100% - 18px)!important;
+  }
+  #numberRoot{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  #numberRoot .num-card{
+    aspect-ratio:auto!important;
+    min-height:184px!important;
+  }
+  #bookmap .book-unit{
+    padding:17px 15px!important;
+  }
+  #bookmap .book-leaf-line{
+    grid-template-columns:minmax(1.9em,var(--tree-no-w,36px)) minmax(0,1fr)!important;
+  }
+  #bookmap .book-leaf-line .tree-inline-body{
+    grid-column:2!important;
+  }
+  #bookmap .tree-body{
+    padding-left:calc(var(--tree-no-w,36px) + 4px)!important;
+  }
+}
+</style>
 
 </body>
 </html>
